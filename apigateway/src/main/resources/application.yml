@@ -4,12 +4,36 @@ server:
 spring:
   application:
     name: gateway-service
+  cloud:
+    gateway:
+      discover:
+        locator:
+          enabled: true
+      routes:
+        - id: employeeservice
+          uri: lb://employeeservice
+          predicates:
+            - Path=/api/v1/employees/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10        # Số yêu cầu mới mỗi giây
+                redis-rate-limiter.burstCapacity: 20        # Dung lượng tối đa của bucket
+                redis-rate-limiter.requestedTokens: 1       # Số token được yêu cầu cho mỗi request
+            - KeyAuthFilter
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: null
+      timeout: 2000ms
 
 eureka:
   instance:
     hostname: localhost
   client:
     service-url:
-      default-zone: http://localhost:8761/eureka
+      defaultZone: http://localhost:8761/eureka
       register-with-eureka: true
       fetch-registry: true
