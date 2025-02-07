@@ -1,7 +1,9 @@
 package com.microserviceproject.notificationservice.event;
 
+import com.microserviceproject.commonservice.services.EmailService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.errors.RetriableException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.DltHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
@@ -9,6 +11,9 @@ import org.springframework.kafka.retrytopic.DltStrategy;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 @Slf4j
@@ -31,5 +36,16 @@ public class EventConsumer {
 	@DltHandler
 	void processDltMessage(@Payload String messsage) {
 		log.info("DLT receive message: " + messsage);
+	}
+
+	@Autowired
+	private EmailService emailService;
+
+	@KafkaListener(topics = "emailTemplate", containerFactory = "kafkaListenerContainerFactory")
+	public void emailTemplate(String message) {
+		log.info("Received message: " + message);
+		Map<String, Object> placeholders = new HashMap<>();
+		placeholders.put("name", "Lap trinh FullStack");
+		emailService.sendEmailWithTemplate(message, "Welcome to Christmas", "emailTemplate.ftl", placeholders, null);
 	}
 }
