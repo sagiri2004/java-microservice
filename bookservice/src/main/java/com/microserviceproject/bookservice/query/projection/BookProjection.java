@@ -2,7 +2,8 @@ package com.microserviceproject.bookservice.query.projection;
 
 import com.microserviceproject.bookservice.command.data.Book;
 import com.microserviceproject.bookservice.command.data.BookRepository;
-import com.microserviceproject.bookservice.query.queries.GetBookDetailQuery;
+import com.microserviceproject.commonservice.model.BookResponseCommonModel;
+import com.microserviceproject.commonservice.queries.GetBookDetailQuery;
 import com.microserviceproject.bookservice.query.model.BookResponseModel;
 import com.microserviceproject.bookservice.query.queries.GetAllBookQuery;
 import org.axonframework.queryhandling.QueryHandler;
@@ -31,8 +32,8 @@ public class BookProjection {
 	}
 
 	@QueryHandler
-	public BookResponseModel handle(GetBookDetailQuery query) throws Exception {
-		BookResponseModel bookResponseModel = new BookResponseModel();
+	public BookResponseCommonModel handle(GetBookDetailQuery query) throws Exception {
+		BookResponseCommonModel bookResponseModel = new BookResponseCommonModel();
 		Book book = bookRepository.findById(query.getId()).orElseThrow(() -> new Exception("Book not found" + query.getId()));
 		BeanUtils.copyProperties(book, bookResponseModel);
 		return bookResponseModel;

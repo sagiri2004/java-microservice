@@ -1,4 +1,4 @@
-package com.microserviceproject.bookservice.query.queries;
+package com.microserviceproject.borrowingservice.command.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,6 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class GetBookDetailQuery {
-	private String id;
+public class BorrowingDeletedEvent {
+	String id;
 }

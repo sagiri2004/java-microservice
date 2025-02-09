@@ -1,6 +1,7 @@
 package com.microserviceproject.bookservice.query.controller;
 
-import com.microserviceproject.bookservice.query.queries.GetBookDetailQuery;
+import com.microserviceproject.commonservice.model.BookResponseCommonModel;
+import com.microserviceproject.commonservice.queries.GetBookDetailQuery;
 import com.microserviceproject.bookservice.query.model.BookResponseModel;
 import com.microserviceproject.bookservice.query.queries.GetAllBookQuery;
 import com.microserviceproject.commonservice.services.KafkaService;
@@ -24,9 +25,9 @@ public class BookQueryController {
 	}
 
 	@GetMapping("{bookId}")
-	public BookResponseModel getBookDetail(@PathVariable String bookId) {
+	public BookResponseCommonModel getBookDetail(@PathVariable String bookId) {
 		GetBookDetailQuery query = new GetBookDetailQuery(bookId);
-		return queryGateway.query(query, ResponseTypes.instanceOf(BookResponseModel.class)).join();
+		return queryGateway.query(query, ResponseTypes.instanceOf(BookResponseCommonModel.class)).join();
 	}
 
 	@Autowired
