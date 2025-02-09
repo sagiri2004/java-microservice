@@ -1,15 +1,15 @@
-package com.microserviceproject.borrowingservice.command.model;
+package com.microserviceproject.commonservice.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class BorrowingCreateModel {
+public class BookRollBackStatusEvent {
 	private String bookId;
+	private Boolean isReady;
 	private String employeeId;
+	private String borrowingId;
 }

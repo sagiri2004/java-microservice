@@ -6,7 +6,9 @@ import com.microserviceproject.bookservice.command.command.UpdateBookCommand;
 import com.microserviceproject.bookservice.command.event.BookCreatedEvent;
 import com.microserviceproject.bookservice.command.event.BookDeletedEvent;
 import com.microserviceproject.bookservice.command.event.BookUpdatedEvent;
+import com.microserviceproject.commonservice.command.RollBackStatusBookCommand;
 import com.microserviceproject.commonservice.command.UpdateStatusBookCommand;
+import com.microserviceproject.commonservice.event.BookRollBackStatusEvent;
 import com.microserviceproject.commonservice.event.BookUpdateStatusEvent;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -55,6 +57,19 @@ public class BookAggregate {
 		BookUpdateStatusEvent event = new BookUpdateStatusEvent();
 		BeanUtils.copyProperties(command, event);
 		AggregateLifecycle.apply(event);
+	}
+
+	@CommandHandler
+	public void handler(RollBackStatusBookCommand command) {
+		BookRollBackStatusEvent event = new BookRollBackStatusEvent();
+		BeanUtils.copyProperties(command, event);
+		AggregateLifecycle.apply(event);
+	}
+
+	@EventSourcingHandler
+	public void on(BookRollBackStatusEvent event) {
+		this.id = event.getBookId();
+		this.isReady = event.getIsReady();
 	}
 
 	@EventSourcingHandler

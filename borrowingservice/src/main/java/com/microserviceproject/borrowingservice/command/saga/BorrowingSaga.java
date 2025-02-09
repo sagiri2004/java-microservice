@@ -2,13 +2,19 @@ package com.microserviceproject.borrowingservice.command.saga;
 
 import com.microserviceproject.borrowingservice.command.command.DeleteBorrowingCommand;
 import com.microserviceproject.borrowingservice.command.event.BorrowingCreatedEvent;
+import com.microserviceproject.borrowingservice.command.event.BorrowingDeletedEvent;
+import com.microserviceproject.commonservice.command.RollBackStatusBookCommand;
 import com.microserviceproject.commonservice.command.UpdateStatusBookCommand;
+import com.microserviceproject.commonservice.event.BookRollBackStatusEvent;
 import com.microserviceproject.commonservice.event.BookUpdateStatusEvent;
 import com.microserviceproject.commonservice.model.BookResponseCommonModel;
+import com.microserviceproject.commonservice.model.EmployeeResponseCommonModel;
 import com.microserviceproject.commonservice.queries.GetBookDetailQuery;
+import com.microserviceproject.commonservice.queries.GetDetailEmployeeQuery;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.messaging.responsetypes.ResponseTypes;
+import org.axonframework.modelling.saga.EndSaga;
 import org.axonframework.modelling.saga.SagaEventHandler;
 import org.axonframework.modelling.saga.SagaLifecycle;
 import org.axonframework.modelling.saga.StartSaga;
@@ -51,19 +57,16 @@ public class BorrowingSaga {
 	private void handler(BookUpdateStatusEvent event) {
 		log.info("BookUpdateStatusEvent in Saga for BookId : " + event.getBookId());
 		try {
-//			GetDetailEmployeeQuery query = new GetDetailEmployeeQuery(event.getEmployeeId());
-//			EmployeeResponseCommonModel employeeModel = queryGateway.query(query, ResponseTypes.instanceOf(EmployeeResponseCommonModel.class)).join();
-//			if (employeeModel.getIsDisciplined()) {
-//				throw new Exception("Nhân viên bị kỉ luật");
-//			} else {
-//				log.info("Đã mượn sách thành công");
-//				SagaLifecycle.end();
-//			}
-
-			SagaLifecycle.end();
-
+			GetDetailEmployeeQuery query = new GetDetailEmployeeQuery(event.getEmployeeId());
+			EmployeeResponseCommonModel employeeModel = queryGateway.query(query, ResponseTypes.instanceOf(EmployeeResponseCommonModel.class)).join();
+			if (employeeModel.getIsDisciplined()) {
+				throw new Exception("Nhân viên bị kỉ luật");
+			} else {
+				log.info("Đã mượn sách thành công");
+				SagaLifecycle.end();
+			}
 		} catch (Exception ex) {
-//			rollBackBookStatus(event.getBookId(), event.getEmployeeId(), event.getBorrowingId());
+			rollBackBookStatus(event.getBookId(), event.getEmployeeId(), event.getBorrowingId());
 			log.error(ex.getMessage());
 		}
 	}
@@ -71,5 +74,24 @@ public class BorrowingSaga {
 	private void rollbackBorrowingRecord(String id) {
 		DeleteBorrowingCommand command = new DeleteBorrowingCommand(id);
 		commandGateway.sendAndWait(command);
+	}
+
+	private void rollBackBookStatus(String bookId, String employeeId, String borrowingId) {
+		SagaLifecycle.associateWith("bookId", bookId);
+		RollBackStatusBookCommand command = new RollBackStatusBookCommand(bookId, true, employeeId, borrowingId);
+		commandGateway.sendAndWait(command);
+	}
+
+	@SagaEventHandler(associationProperty = "bookId")
+	private void handle(BookRollBackStatusEvent event) {
+		log.info("BookRollBackStatusEvent in Saga for book Id : {} " + event.getBookId());
+		rollbackBorrowingRecord(event.getBorrowingId());
+	}
+
+	@SagaEventHandler(associationProperty = "id")
+	@EndSaga
+	private void handle(BorrowingDeletedEvent event) {
+		log.info("BorrowDeletedEvent in Saga for Borrowing Id : {} " + event.getId());
+		SagaLifecycle.end();
 	}
 }
