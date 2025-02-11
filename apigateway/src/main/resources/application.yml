@@ -10,6 +10,7 @@ spring:
         locator:
           enabled: true
       routes:
+        # Employee Service
         - id: employeeservice
           uri: lb://employeeservice
           predicates:
@@ -17,23 +18,47 @@ spring:
           filters:
             - name: RequestRateLimiter
               args:
-                redis-rate-limiter.replenishRate: 10        # Số yêu cầu mới mỗi giây
-                redis-rate-limiter.burstCapacity: 20        # Dung lượng tối đa của bucket
-                redis-rate-limiter.requestedTokens: 1       # Số token được yêu cầu cho mỗi request
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
             - KeyAuthFilter
+
+        # Book Service
+        - id: bookservice
+          uri: lb://bookservice
+          predicates:
+            - Path=/api/v1/books/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+
+        # Borrowing Service
+        - id: borrowingservice
+          uri: lb://borrowingservice
+          predicates:
+            - Path=/api/v1/borrowing/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
 
   data:
     redis:
-      host: localhost
+      host: redis
       port: 6379
       password: null
       timeout: 2000ms
 
 eureka:
   instance:
-    hostname: localhost
+    hostname: discoveryserver
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: http://discoveryserver:8761/eureka
       register-with-eureka: true
       fetch-registry: true
